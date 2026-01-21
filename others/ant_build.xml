@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="unicorn-web" default="build-jar" basedir=".">
+
+    <property name="version" value="1.0.0"/>
+    <property name="jar.name" value="china.framework${version}.jar"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="src.dir" value="src"/>
+    <property name="resources.dir" value="embedded"/>
+
+    <!-- JAR 出力先 -->
+    <target name="init">
+        <mkdir dir="${build.dir}/ant/jar"/>
+    </target>
+
+    <!-- Gradle 同等の source-in-jar -->
+    <target name="build-jar" depends="init">
+        <jar destfile="${build.dir}/jar/${jar.name}">
+            
+            <!-- １、クラスファイル -->
+            <fileset dir="${classes.dir}" includes="**/*.class"/>
+
+            <!-- ２、ソースコード -->
+            <fileset dir="${src.dir}" includes="**/*.java"/>
+
+            <!-- ３、embedded リソース -->
+            <fileset dir="${resources.dir}" includes="**/*.*"/>
+
+            <!-- ４、ルートディレクトリの指定ファイル -->
+            <fileset dir="." includes="mirage-generate-entity.dtd,mirage-generate-entity.xml"/>
+            
+        </jar>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}/ant/jar"/>
+    </target>
+
+</project>
