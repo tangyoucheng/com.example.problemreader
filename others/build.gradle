@@ -1,0 +1,43 @@
+plugins {
+    id 'base'
+}
+
+version = '1.0.0'
+
+task sourceInJar(type: Jar) {
+    archiveBaseName = 'china.framework'
+    archiveVersion = version
+
+    // -------------------
+    // １、クラスファイル
+    // -------------------
+    from('build/classes') {
+        include '**/*.class'
+        into ''  // 元のパッケージ構造を保持
+    }
+
+    // -------------------
+    // ２、ソースコード
+    // -------------------
+    from('src') {
+        include '**/*.java'
+        into ''  // 元のパッケージ構造を保持
+    }
+
+    // -------------------
+    // ３、embedded リソース
+    // -------------------
+    from('embedded') {
+        include '**/*.*'
+        into ''  // ディレクトリ構造を保持
+    }
+
+    // -------------------
+    // ４、ルートディレクトリのファイル
+    // -------------------
+    from('.') {
+        include 'mirage-generate-entity.dtd'
+        include 'mirage-generate-entity.xml'
+        into ''  // JAR のルートに配置
+    }
+}
