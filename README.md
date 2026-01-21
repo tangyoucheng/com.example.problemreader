@@ -8,18 +8,18 @@ Build id: 20251204-0850
 
 ２、eclipse的插件项目点击右键  
 Run As  
-⇒Eclipse Application  
+>⇒Eclipse Application  
   
 ３、之后再修改运行参数  
 eclipse application的main  
-⇒Program to Run  
-  ⇒com.example.problemreader.Application (选择)  
+>⇒Program to Run  
+>>⇒com.example.problemreader.Application (选择)  
     
 eclipse application的Arguments  
-⇒Program arguments  
-  ⇒-data C:\workspace_check (追加参数)  
+>⇒Program arguments  
+>>⇒-data C:\workspace_check (追加参数)  
   
 4、启动后，如果有错误常见的就是Plug-ins 页面里面选的不匹配  
 eclipse application的Plug-ins  
-⇒Target Platform  
+>⇒Target Platform  
 
