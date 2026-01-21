@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Problem Reader
+Bundle-SymbolicName: com.example.problemreader;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-21
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.equinox.app,
+ org.eclipse.jdt.core
+Bundle-ClassPath: .,
+ libs/poi-5.5.0.jar,
+ libs/poi-ooxml-5.5.0.jar,
+ libs/poi-ooxml-full-5.5.0.jar,
+ libs/poi-ooxml-schemas-4.1.2.jar,
+ libs/poi-scratchpad-5.5.0.jar,
+ libs/spring-beans-7.0.0.jar,
+ libs/spring-core-7.0.0.jar,
+ libs/xmlbeans-5.3.0.jar,
+ libs/commons-collections4-4.5.0.jar,
+ libs/commons-compress-1.28.0.jar,
+ libs/commons-io-2.21.0.jar,
+ libs/commons-lang3-3.20.0.jar,
+ libs/log4j-api-2.25.2.jar,
+ libs/log4j-core-2.25.2.jar
