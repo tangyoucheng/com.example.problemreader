@@ -17,4 +17,4 @@ eclipse application的main
   
 eclipse application的Arguments
 ⇒Program arguments
-  ⇒-data C:\workspace_kyousera (追加)
+  ⇒-data C:\workspace_check (追加参数)
