@@ -13,13 +13,13 @@ Run As
 ３、之后再修改运行参数  
 eclipse application的main  
 >⇒Program to Run  
->>⇒com.example.problemreader.Application (选择)
+>>⇒com.example.problemreader.Application (选择)  
 >>和plugin.xml里面这个类是同一个
->>      <application>
-         <run
-               class="com.example.problemreader.Application">
-         </run>
-      </application>
+>>      <application>  
+>>       <run  
+>>             class="com.example.problemreader.Application">  
+>>       </run>  
+>>      </application>  
     
 eclipse application的Arguments  
 >⇒Program arguments  
