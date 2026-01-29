@@ -15,7 +15,7 @@ eclipse application的main
 >⇒Program to Run  
 >>⇒com.example.problemreader.Application (选择)  
 >>和plugin.xml里面这个类是同一个
->>       <run class="com.example.problemreader.Application"></run>  
+>>       \<run class="com.example.problemreader.Application"\>
     
 eclipse application的Arguments  
 >⇒Program arguments  
