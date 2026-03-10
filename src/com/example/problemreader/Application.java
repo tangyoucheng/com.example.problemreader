@@ -1,13 +1,23 @@
-package com.example.problemreader;
+package problemreader;
+
 
 import java.io.File;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -51,6 +61,9 @@ import cn.com.platform.framework.file.ExcelMakeFile;
  * - 方法/类/字段均显示修饰符
  */
 public class Application implements IApplication {
+	
+	public ExcelMakeFile excelMakeFile;
+	public XSSFSheet outputSheet;
 
     // 用于去重，避免重复输出相同信息
     private final Set<String> reported = new HashSet<>();
@@ -61,15 +74,29 @@ public class Application implements IApplication {
         System.out.println("Workspace: " + root.getLocation());
         System.out.println("===================================");
         
-        String projectPath = Paths.get("C:\\workspace_rcp\\com.example.problemreader").toAbsolutePath().toString();
-        ExcelMakeFile excelMakeFile = new ExcelMakeFile(new File(projectPath+"/resources/Spring移行修正一覧.xlsx"));
+        String projectPath = Paths.get("C:\\workspace_rcp\\problemreader").toAbsolutePath().toString();
+        excelMakeFile = new ExcelMakeFile(new File(projectPath+"/resources/Spring移行修正一覧.xlsx"));
+        outputSheet =  excelMakeFile.workbook.getSheet("修正一覧");
         
 
         // 遍历工作区所有项目
         for (IProject project : root.getProjects()) {
             if (!project.isOpen()) continue;                   // 忽略未打开的项目
             if (!project.hasNature(JavaCore.NATURE_ID)) continue; // 忽略非 Java 项目
-            if (!"unicorn3.framework".equals(project.getName())) continue;
+//            if (!"CM00".equals(project.getName())) 
+//            if (!"CM00_3".equals(project.getName())) 
+//            if (!"CM01".equals(project.getName())) 
+//            if (!"CM09".equals(project.getName())) 
+//            if (!"CM09_3".equals(project.getName())) 
+//            if (!"unicorn.cm.entity".equals(project.getName())) 
+//            if (!"unicorn.VM.entity".equals(project.getName())) 
+//            if (!"unicorn3.framework".equals(project.getName())) 
+//            if (!"UnicornVZ3".equals(project.getName())) 
+//            if (!"Unicorn".equals(project.getName())) 
+            if (!"Wildfly_CM00_4_wuxi03".equals(project.getName())) 
+            {
+            	continue;
+            }
 
             System.out.println("\n[Project] " + project.getName());
             IJavaProject javaProject = JavaCore.create(project);
@@ -111,6 +138,21 @@ public class Application implements IApplication {
                     }
                 }
             }
+
+			String outputDir = "outputdeprecatedfiles"; // 存放EXCEL报告的目录
+
+			// 指定的不存在的场合就做成。
+			File reportFolder = new File(projectPath + "/" + outputDir);
+			if (!reportFolder.exists()) {
+				reportFolder.mkdirs();
+			}
+
+			DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+//			String fileName = "demo".concat(df.format(LocalDateTime.now()));
+			String fileName = project.getName().concat(df.format(LocalDateTime.now()));
+			fileName = fileName.concat(".xlsx");
+//              String fileName = reportFile.concat(".xlsx");
+			Files.write(Paths.get(projectPath + "/" + outputDir + "/" + fileName), excelMakeFile.getBytes());
             
             
         }
@@ -158,6 +200,25 @@ public class Application implements IApplication {
                 }
                 System.out.println(fullName + "  (line " + line + ")");
                 System.out.println("  -> ERROR: " + message);
+                
+                // 输出到excel模板
+                int sheetLastRowNum =  outputSheet.getLastRowNum()+2;
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "B" + sheetLastRowNum, sheetLastRowNum -4);
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "C" + sheetLastRowNum, fullName);
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "D" + sheetLastRowNum, fullName + "  (line " + line + ")" + "\n  -> ERROR: " + message);
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "J" + sheetLastRowNum, "削除");
+
+                Pattern p = Pattern.compile("The import\\s+(javax\\.[\\w\\.]+)\\s+cannot be resolved");
+                Matcher m = p.matcher(message);
+                if (m.find()) {
+                    String javaxPackage = m.group(1);
+                    String jakartaPackage = javaxPackage.replaceFirst("javax\\.", "jakarta.");
+                    System.out.println(javaxPackage + " -> " + jakartaPackage);
+                    excelMakeFile.setCellValue(outputSheet.getSheetName(), "K" + sheetLastRowNum, javaxPackage + "\n  -> " + jakartaPackage);
+                }
+
+				setBorderStyle(excelMakeFile, outputSheet.getSheetName(), sheetLastRowNum);
+				
             } catch (JavaModelException e) {
                 System.out.println(unit.getElementName() + "  (line " + line + ")");
                 System.out.println("  -> ERROR: " + message);
@@ -211,11 +272,14 @@ public class Application implements IApplication {
 
             // 检查父类 deprecated
             if (node.getSuperclassType() != null) {
-                checkDeprecatedType(node, node.getSuperclassType(), "extends");
+//                checkDeprecatedType(node, node.getSuperclassType(), "extends");
+                checkDeprecatedType(node.getSuperclassType(), node.getSuperclassType(), "extends");
             }
             // 检查接口 deprecated
             for (Object o : node.superInterfaceTypes()) {
-                checkDeprecatedType(node, (Type) o, "implements");
+//                checkDeprecatedType(node, (Type) o, "implements");
+                Type t = (Type) o;
+              checkDeprecatedType(t, t, "implements");
             }
             return super.visit(node);
         }
@@ -271,6 +335,15 @@ public class Application implements IApplication {
             if (reported.add(key)) {
                 System.out.println(caller + "  (line " + line + ")");
                 System.out.println("  -> " + callee);
+
+                // 输出到excel模板
+                int sheetLastRowNum =  outputSheet.getLastRowNum()+2;
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "B" + sheetLastRowNum, sheetLastRowNum -4);
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "C" + sheetLastRowNum, caller);
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "D" + sheetLastRowNum, caller + "  (line " + line + ")" + "\n  -> " + callee);
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "J" + sheetLastRowNum, "廃止予定");
+
+				setBorderStyle(excelMakeFile, outputSheet.getSheetName(), sheetLastRowNum);
             }
         }
 
@@ -304,6 +377,7 @@ public class Application implements IApplication {
             } else {
                 params = "\n    " + Arrays.stream(mb.getParameterTypes())
                         .map(this::formatType)
+//                        .collect(Collectors.joining(",\n    "));
                         .collect(Collectors.joining(",\n    ")) + "\n";
             }
 
@@ -337,6 +411,23 @@ public class Application implements IApplication {
         // ---------- 格式化修饰符 ----------
         private String formatModifiers(int mods) {
             return Modifier.toString(mods);
+        }
+    }
+
+    
+    public static void setBorderStyle(ExcelMakeFile excelMakeFile,String sheetName,int sheetLastRowNum){
+
+        // 设置列范围 B~M
+        String[] cols = {"B","C","D","E","F","G","H","I","J","K","L","M","N"};
+        for (String colLetter : cols) {
+            excelMakeFile.setBorder(sheetName, colLetter+sheetLastRowNum, BorderStyle.THIN);
+            if ("B".equals(colLetter)) {
+                excelMakeFile.setAlignment(sheetName, colLetter+sheetLastRowNum, HorizontalAlignment.CENTER);
+                excelMakeFile.setVerticalAlignment(sheetName, colLetter+sheetLastRowNum, VerticalAlignment.CENTER);
+			} else {
+	            excelMakeFile.setAlignment(sheetName, colLetter+sheetLastRowNum, HorizontalAlignment.LEFT);
+	            excelMakeFile.setVerticalAlignment(sheetName, colLetter+sheetLastRowNum, VerticalAlignment.TOP);
+			}
         }
     }
 
