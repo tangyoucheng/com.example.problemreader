@@ -1462,24 +1462,34 @@ public class ExcelMakeFile extends ExcelFile {
   // =============================
   private CellStyle copyCellStyle(String sheetName, String range) {
 
-      CellStyle oldStyle = getCellStyle(sheetName, range);
+	    CellStyle oldStyle = getCellStyle(sheetName, range);
+	    if (oldStyle == null) {
+		    // 缓存里没有，就创建新的样式
+		    XSSFCellStyle newStyle = workbook.createCellStyle();
+		    newStyle.cloneStyleFrom(oldStyle);
 
-      XSSFCellStyle newStyle = workbook.createCellStyle();
+		    // 放入缓存
+		    styleCache.put(buildStyleKey(newStyle), newStyle);
+	        return newStyle; // 或者直接返回 workbook.createCellStyle()
+	    }
 
-      if (oldStyle != null) {
-          newStyle.cloneStyleFrom(oldStyle);
-      }
+	    // 用 oldStyle 生成 key
+	    String key = buildStyleKey(oldStyle);
 
-      String key = buildStyleKey(newStyle);
+	    // 先检查缓存
+	    if (styleCache.containsKey(key)) {
+	        return styleCache.get(key);
+	    }
 
-      if (styleCache.containsKey(key)) {
-          return styleCache.get(key);
-      }
+	    // 缓存里没有，就创建新的样式
+	    XSSFCellStyle newStyle = workbook.createCellStyle();
+	    newStyle.cloneStyleFrom(oldStyle);
 
-      styleCache.put(key, newStyle);
+	    // 放入缓存
+	    styleCache.put(key, newStyle);
 
-      return newStyle;
-  }
+	    return newStyle;
+	}
 
 
   // =============================
