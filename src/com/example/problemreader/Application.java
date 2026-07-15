@@ -1,5 +1,4 @@
-package problemreader;
-
+package com.example.problemreader;
 
 import java.io.File;
 import java.lang.reflect.Modifier;
@@ -50,6 +49,8 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import com.example.problemreader.util.MarkerUtils;
+
 import cn.com.platform.framework.file.ExcelMakeFile;
 
 /**
@@ -74,7 +75,7 @@ public class Application implements IApplication {
         System.out.println("Workspace: " + root.getLocation());
         System.out.println("===================================");
         
-        String projectPath = Paths.get("C:\\workspace_rcp\\problemreader").toAbsolutePath().toString();
+        String projectPath = Paths.get("C:\\workspace_rcp\\com.example.problemreader").toAbsolutePath().toString();
         excelMakeFile = new ExcelMakeFile(new File(projectPath+"/resources/Spring移行修正一覧.xlsx"));
         outputSheet =  excelMakeFile.workbook.getSheet("修正一覧");
         
@@ -91,9 +92,8 @@ public class Application implements IApplication {
 //            if (!"unicorn.cm.entity".equals(project.getName())) 
 //            if (!"unicorn.VM.entity".equals(project.getName())) 
 //            if (!"unicorn3.framework".equals(project.getName())) 
-//            if (!"UnicornVZ3".equals(project.getName())) 
+            if (!"Unicorn3".equals(project.getName())) 
 //            if (!"Unicorn".equals(project.getName())) 
-            if (!"Wildfly_CM00_4_wuxi03".equals(project.getName())) 
             {
             	continue;
             }
@@ -185,6 +185,7 @@ public class Application implements IApplication {
 
             int line = marker.getAttribute(IMarker.LINE_NUMBER, -1);
             String message = marker.getAttribute(IMarker.MESSAGE, "unknown error");
+            String lineContent = MarkerUtils.getLineContentFromMarker(marker);
 
             // 避免重复输出
             String key = unit.getElementName() + ":" + line + " -> " + message;
@@ -198,14 +199,19 @@ public class Application implements IApplication {
                     IType type = types[0];
                     fullName = type.getFullyQualifiedName(); // 包含 package
                 }
-                System.out.println(fullName + "  (line " + line + ")");
+                System.out.println(fullName);
+                System.out.println("(line " + line + ")  " + lineContent);
                 System.out.println("  -> ERROR: " + message);
                 
                 // 输出到excel模板
                 int sheetLastRowNum =  outputSheet.getLastRowNum()+2;
                 excelMakeFile.setCellValue(outputSheet.getSheetName(), "B" + sheetLastRowNum, sheetLastRowNum -4);
                 excelMakeFile.setCellValue(outputSheet.getSheetName(), "C" + sheetLastRowNum, fullName);
-                excelMakeFile.setCellValue(outputSheet.getSheetName(), "D" + sheetLastRowNum, fullName + "  (line " + line + ")" + "\n  -> ERROR: " + message);
+                excelMakeFile.setCellValue(outputSheet.getSheetName(), "D" + sheetLastRowNum, 
+//                		fullName +
+                		 "(line " + line + ")\n" + lineContent
+                		+ "\n  -> ERROR: " + message
+                				);
                 excelMakeFile.setCellValue(outputSheet.getSheetName(), "J" + sheetLastRowNum, "削除");
 
                 Pattern p = Pattern.compile("The import\\s+(javax\\.[\\w\\.]+)\\s+cannot be resolved");
@@ -216,11 +222,16 @@ public class Application implements IApplication {
                     System.out.println(javaxPackage + " -> " + jakartaPackage);
                     excelMakeFile.setCellValue(outputSheet.getSheetName(), "K" + sheetLastRowNum, javaxPackage + "\n  -> " + jakartaPackage);
                 }
+                // import是mirage的场合，输出对策
+                if (lineContent != null && lineContent.contains("jp.sf.amateras.mirage")) {
+                    excelMakeFile.setCellValue(outputSheet.getSheetName(), "K" + sheetLastRowNum,  "jp.sf.amateras.mirage\n  -> com.miragesql.miragesql");
+                }
 
 				setBorderStyle(excelMakeFile, outputSheet.getSheetName(), sheetLastRowNum);
 				
             } catch (JavaModelException e) {
-                System.out.println(unit.getElementName() + "  (line " + line + ")");
+                System.out.println(unit.getElementName() );
+                System.out.println(unit.getElementName() + "(line " + line + ")  " + lineContent);
                 System.out.println("  -> ERROR: " + message);
             }
         }
